@@ -18,4 +18,4 @@
         password: dckr_pat_8k7OeFBZmdcpaDiXB1t2pvV04BU  
 
     - name: Apply Deployment
-      command: kubectl apply -f /home/ubuntu/deployment.yaml
+      command: sudo kubectl apply -f /home/ubuntu/deployment.yaml
