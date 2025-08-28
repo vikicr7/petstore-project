@@ -14,8 +14,18 @@
 #    limitations under the License.
 #
 
-FROM openjdk:17.0.2
-COPY . /usr/src/myapp
+FROM tomcat:9.0-jdk17
 WORKDIR /usr/src/myapp
-RUN ./mvnw clean package
-CMD ./mvnw cargo:run -P tomcat90
+
+# Remove default ROOT webapp
+RUN rm -rf /usr/local/tomcat/webapps/ROOT
+
+# Copy pre-built WAR from Jenkins
+COPY target/jpetstore.war /usr/local/tomcat/webapps/ROOT.war
+
+# Expose Tomcat port
+EXPOSE 8080
+
+# Start Tomcat
+CMD ["catalina.sh", "run"]
+
