@@ -8,77 +8,92 @@ MyBatis JPetStore
 
 ![mybatis-jpetstore](https://mybatis.org/images/mybatis-logo.png)
 
-JPetStore 6 is a full web application built on top of MyBatis 3, Spring 5 and Stripes.
 
 Essentials
 ----------
 
-* [See the docs](http://www.mybatis.org/jpetstore-6)
 
-## Other versions that you may want to know about
+Server-1 - Jenkins
+==================
 
-- JPetstore on top of Spring, Spring MVC, MyBatis 3, and Spring Security https://github.com/making/spring-jpetstore
-- JPetstore with Vaadin and Spring Boot with Java Config https://github.com/igor-baiborodine/jpetstore-6-vaadin-spring-boot
-- JPetstore on MyBatis Spring Boot Starter https://github.com/kazuki43zoo/mybatis-spring-boot-jpetstore
+Create an Ubuntu with t2.xlarge
 
-## Run on Application Server
-Running JPetStore sample under Tomcat (using the [cargo-maven2-plugin](https://codehaus-cargo.github.io/cargo/Maven2+plugin.html)).
+Add in userdata
 
-- Clone this repository
+#!/bin/bash
+sudo apt update
+sudo apt install -y wget gnupg software-properties-common
+wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | sudo apt-key add -
+sudo add-apt-repository --yes https://packages.adoptium.net/artifactory/deb
+sudo apt update
+sudo apt install temurin-21-jdk -y
+/usr/bin/java --version
 
-  ```
-  $ git clone https://github.com/mybatis/jpetstore-6.git
-  ```
+#install jenkins
+curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/ | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt-get update -y
+sudo apt-get install jenkins -y
+sudo systemctl start jenkins
+sudo systemctl status jenkins
 
-- Build war file
+#install docker
+sudo apt-get update
+sudo apt-get install docker.io -y
+sudo usermod -aG docker ubuntu
+sudo usermod -aG docker jenkins
+newgrp docker
+sudo chmod 777 /var/run/docker.sock
+sudo systemctl restart jenkins
+docker run -d --name sonar -p 9000:9000 sonarqube:community
 
-  ```
-  $ cd jpetstore-6
-  $ ./mvnw clean package
-  ```
+# install trivy
+sudo apt-get install wget apt-transport-https gnupg lsb-release -y
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+sudo apt-get update
+sudo apt-get install trivy -y
 
-- Startup the Tomcat server and deploy web application
+# Install Ansible
+sudo apt install software-properties-common
+sudo add-apt-repository --yes --update ppa:ansible/ansible
+sudo apt install python3
+sudo apt install ansible -y
 
-  ```
-  $ ./mvnw cargo:run -P tomcat90
-  ```
 
-  > Note:
-  >
-  > We provide maven profiles per application server as follow:
-  >
-  > | Profile        | Description |
-  > | -------------- | ----------- |
-  > | tomcat90       | Running under the Tomcat 9.0 |
-  > | tomcat85       | Running under the Tomcat 8.5 |
-  > | tomee80        | Running under the TomEE 8.0(Java EE 8) |
-  > | tomee71        | Running under the TomEE 7.1(Java EE 7) |
-  > | wildfly26      | Running under the WildFly 26(Java EE 8) |
-  > | wildfly13      | Running under the WildFly 13(Java EE 7) |
-  > | liberty-ee8    | Running under the WebSphere Liberty(Java EE 8) |
-  > | liberty-ee7    | Running under the WebSphere Liberty(Java EE 7) |
-  > | jetty          | Running under the Jetty 9 |
-  > | glassfish5     | Running under the GlassFish 5(Java EE 8) |
-  > | glassfish4     | Running under the GlassFish 4(Java EE 7) |
-  > | resin          | Running under the Resin 4 |
+Server-2 -K8s Client
+=====================
 
-- Run application in browser http://localhost:8080/jpetstore/ 
-- Press Ctrl-C to stop the server.
+Create an Ubuntu with t2.micro
 
-## Run on Docker
-```
-docker build . -t jpetstore
-docker run -p 8080:8080 jpetstore
-```
-or with Docker Compose:
-```
-docker compose up -d
-```
 
-## Try integration tests
+#!/bin/bash
+sudo apt update
 
-Perform integration tests for screen transition.
+# Install AWS CLI 
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+sudo apt-get install unzip -y
+unzip awscliv2.zip
+sudo ./aws/install
 
-```
-$ ./mvnw clean verify -P tomcat90
-```
+
+# Install kubectl
+sudo apt update
+sudo apt install curl -y
+curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+kubectl version --client
+
+
+# Install Eksctl
+
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+eksctl version
+
+
+# Eks Cluster Creation
+
+eksctl create cluster --name vijay-cluster --region ap-south-1 --node-type t2.medium --zones ap-south-1a,ap-south-1b
+
+
