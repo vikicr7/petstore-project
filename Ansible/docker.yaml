@@ -25,4 +25,4 @@
       command: docker push vijay3639/petstore:latest
 
     - name: Run container
-      command: docker run -d --name pet1 -p 8081:8080 vijay3639/petstore:latest
+      command: docker run -d --name pet -p 8081:8080 vijay3639/petstore:latest
