@@ -1,33 +1,31 @@
-- name: docker build and push
-  hosts: local  # Replace with the hostname or IP address of your target server
-  become: yes  # Run tasks with sudo privileges
-
+- name: Build and Deploy Petstore
+  hosts: local
+  become: yes
   tasks:
     - name: Update apt package cache
       apt:
-        update_cache: yes   
-
-    - name: Update install docker
-      apt:
-        name: docker
-        state: present
-        
-    - name: Build Docker Image
-      command: docker build -t petstore .
-      args:
-        chdir: /var/lib/jenkins/workspace/petstore
-
-    - name: tag image
-      command: docker tag petstore:latest vijay3639/petstore:latest 
+        update_cache: yes
 
     - name: Log in to Docker Hub
       community.docker.docker_login:
         registry_url: https://index.docker.io/v1/
-        username: vijay3639
-        password: dckr_pat_8k7OeFBZmdcpaDiXB1t2pvV04BU
+        username: "vijay3639"
+        password: "dckr_pat_8k7OeFBZmdcpaDiXB1t2pvV04BU"
 
-    - name: Push image
-      command: docker push vijay3639/petstore:latest
+    - name: Build and Push Docker image
+      community.docker.docker_image:
+        name: "vijay3639/petstore"
+        tag: latest
+        build:
+          path: /var/lib/jenkins/workspace/petstore
+        push: yes
+        source: build
 
-    - name: Run container
-      command: docker run -d --name pet -p 8081:8080 vijay3639/petstore:latest
+    - name: Run Petstore container
+      community.docker.docker_container:
+        name: pet1
+        image: "vijay3639/petstore:latest"
+        state: started
+        restart_policy: always
+        published_ports:
+          - "8081:8080"
