@@ -12,15 +12,5 @@
       become_user: root  # Use a privileged user for copying if required 
 
     - name: Apply Deployment using kubectl
-      command: kubectl apply -f /home/ubuntu/deployment.yaml
-      environment:
-        KUBECONFIG: /home/ubuntu/.kube/config
-      become: no  # kubectl should run as the user who owns kubeconfig
-      register: kubectl_output
+      command: sudo kubectl apply -f /home/ubuntu/deployment.yaml
 
-    - name: Show kubectl output
-      debug:
-        var: kubectl_output.stdout  
-
-    - name: Apply Deployment
-      command: kubectl apply -f /home/ubuntu/deployment.yaml
