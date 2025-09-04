@@ -1,38 +1,24 @@
 ---
-- name: Deploy Kubernetes Application
-  hosts: k8s  # Replace with your target Kubernetes master host or group
+- name: Deploy Kubernetes Application to EKS
+  hosts: k8s   # Replace with your EKS master node or bastion host
   gather_facts: yes
   become: yes
 
   tasks:
-    - name: Copy deployment.yaml to Kubernetes master
+    - name: Copy deployment.yaml to target node
       copy:
         src: /var/lib/jenkins/workspace/petstore/deployment.yaml
         dest: /home/ubuntu/deployment.yaml
-        owner: ubuntu
-        group: ubuntu
-        mode: '0644'
+        mode: '777'
 
-    - name: Ensure .kube directory exists
-      file:
-        path: /home/ubuntu/.kube
-        state: directory
-        owner: ubuntu
-        group: ubuntu
-        mode: '0700'
-
-    - name: Copy kubeconfig to remote node
-      copy:
-        src: /var/lib/jenkins/.kube/config   # Adjust if your kubeconfig is elsewhere
-        dest: /home/ubuntu/.kube/config
-        owner: ubuntu
-        group: ubuntu
-        mode: '0600'
+    - name: Generate kubeconfig for EKS
+      command: aws eks update-kubeconfig --region ap-south-1 --name my-cluster
+      environment:
+        AWS_PROFILE: default   # adjust if you use a specific IAM profile
+      become: no
 
     - name: Apply Deployment using kubectl
       command: kubectl apply -f /home/ubuntu/deployment.yaml
-      environment:
-        KUBECONFIG: /home/ubuntu/.kube/config
       become: no
       register: kubectl_output
 
