@@ -12,7 +12,7 @@
         mode: '777'
 
     - name: Generate kubeconfig for EKS
-      command: aws eks update-kubeconfig --region ap-south-1 --name my-cluster
+      command: aws eks update-kubeconfig --region ap-south-1 --name Vijay
       environment:
         AWS_PROFILE: default   # adjust if you use a specific IAM profile
       become: no
