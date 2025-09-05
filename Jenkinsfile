@@ -8,7 +8,7 @@ pipeline{
         SCANNER_HOME=tool 'sonar-scanner'
     }
     stages{
-        stage ('clean Workspaces'){
+        stage ('clean Workspace'){
             steps{
                 cleanWs()
             }
